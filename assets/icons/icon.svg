@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#4285F4"/>
+  
+  <!-- Book shape -->
+  <g transform="translate(256, 256)">
+    <!-- Book pages -->
+    <rect x="-120" y="-80" width="240" height="160" rx="10" fill="white"/>
+    <!-- Book spine -->
+    <rect x="-5" y="-80" width="10" height="160" fill="#e0e0e0"/>
+    
+    <!-- ABC text on left page -->
+    <text x="-65" y="-20" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#4285F4">ABC</text>
+    
+    <!-- Chinese character on right page -->
+    <text x="35" y="10" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="#FF6B6B">词</text>
+    
+    <!-- Star decoration -->
+    <path d="M -80,-50 L -75,-40 L -65,-40 L -73,-33 L -70,-23 L -80,-30 L -90,-23 L -87,-33 L -95,-40 L -85,-40 Z" fill="#FFD700"/>
+    <path d="M 80,-50 L 85,-40 L 95,-40 L 87,-33 L 90,-23 L 80,-30 L 70,-23 L 73,-33 L 65,-40 L 75,-40 Z" fill="#FFD700"/>
+  </g>
+</svg>

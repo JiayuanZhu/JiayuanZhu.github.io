@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate PWA Icons</title>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <p>Right-click and save each icon:</p>
+    <div id="icons"></div>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const container = document.getElementById('icons');
+        
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background circle
+            ctx.fillStyle = '#4285F4';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/2 - size*0.05, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // White book background
+            ctx.fillStyle = 'white';
+            const bookWidth = size * 0.5;
+            const bookHeight = size * 0.35;
+            const bookX = (size - bookWidth) / 2;
+            const bookY = (size - bookHeight) / 2;
+            
+            // Rounded rectangle for book
+            ctx.beginPath();
+            ctx.roundRect(bookX, bookY, bookWidth, bookHeight, size * 0.02);
+            ctx.fill();
+            
+            // Book spine
+            ctx.fillStyle = '#e0e0e0';
+            ctx.fillRect(size/2 - size*0.01, bookY, size*0.02, bookHeight);
+            
+            // ABC text
+            ctx.fillStyle = '#4285F4';
+            ctx.font = `bold ${size * 0.1}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('ABC', size * 0.35, size * 0.45);
+            
+            // Chinese character
+            ctx.fillStyle = '#FF6B6B';
+            ctx.font = `bold ${size * 0.12}px Arial`;
+            ctx.fillText('词', size * 0.65, size * 0.52);
+            
+            // Stars
+            ctx.fillStyle = '#FFD700';
+            drawStar(ctx, size * 0.3, size * 0.3, size * 0.04, 5);
+            drawStar(ctx, size * 0.7, size * 0.3, size * 0.04, 5);
+            
+            // Add to page
+            const div = document.createElement('div');
+            div.style.margin = '10px';
+            div.style.display = 'inline-block';
+            
+            const label = document.createElement('p');
+            label.textContent = `icon-${size}x${size}.png`;
+            
+            canvas.style.border = '1px solid #ccc';
+            
+            div.appendChild(label);
+            div.appendChild(canvas);
+            container.appendChild(div);
+            
+            // Convert to PNG and create download link
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}x${size}.png`;
+                a.textContent = 'Download';
+                a.style.display = 'block';
+                div.appendChild(a);
+            });
+        });
+        
+        function drawStar(ctx, cx, cy, radius, points) {
+            const angleStep = Math.PI / points;
+            ctx.beginPath();
+            for (let i = 0; i <= points * 2; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const r = i % 2 === 0 ? radius : radius * 0.5;
+                const x = cx + Math.cos(angle) * r;
+                const y = cy + Math.sin(angle) * r;
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+    </script>
+</body>
+</html>

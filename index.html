@@ -1,7 +1,365 @@
-<html>
-<head><title>Welcome!</title></head>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="theme-color" content="#4285F4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="背单词">
+    <title>背单词小助手</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
 <body>
-  <h1>Hello, this is my personal webpage!</h1>
-  <p>Made with ❤️ on GitHub Pages.</p>
+    <div id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">背单词小助手</h1>
+                <button id="menuBtn" class="menu-btn" aria-label="菜单">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-info">
+                    <span id="progressText">今日进度: 0/0</span>
+                    <span id="streakText">🔥 0天</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Menu -->
+        <nav id="navMenu" class="nav-menu">
+            <button class="nav-item active" data-page="learn">
+                <span class="nav-icon">📚</span>
+                <span class="nav-text">学习</span>
+            </button>
+            <button class="nav-item" data-page="manage">
+                <span class="nav-icon">📝</span>
+                <span class="nav-text">管理</span>
+            </button>
+            <button class="nav-item" data-page="stats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">统计</span>
+            </button>
+            <button class="nav-item" data-page="settings">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">设置</span>
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+            <!-- Learning Page -->
+            <section id="learnPage" class="page active">
+                <div class="card-container">
+                    <div id="wordCard" class="word-card">
+                        <div class="card-content">
+                            <div id="cardFront" class="card-face card-front">
+                                <p class="card-hint">点击查看答案</p>
+                                <h2 id="wordEnglish" class="word-english">Welcome</h2>
+                                <p class="card-number">
+                                    <span id="currentIndex">1</span> / <span id="totalWords">1</span>
+                                </p>
+                            </div>
+                            <div id="cardBack" class="card-face card-back hidden">
+                                <h3 id="wordChinese" class="word-chinese">欢迎</h3>
+                                <p id="wordExample" class="word-example">Welcome to vocabulary learning app!</p>
+                                <div class="word-info">
+                                    <span id="reviewCount" class="review-badge">复习: 0次</span>
+                                    <span id="accuracy" class="accuracy-badge">正确率: 0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="btnUnknown" class="btn btn-danger">
+                        <span class="btn-icon">❌</span>
+                        <span class="btn-text">不认识</span>
+                    </button>
+                    <button id="btnKnown" class="btn btn-success">
+                        <span class="btn-icon">✅</span>
+                        <span class="btn-text">认识</span>
+                    </button>
+                </div>
+
+                <div id="emptyState" class="empty-state hidden">
+                    <div class="empty-icon">🎉</div>
+                    <h3>今日学习完成！</h3>
+                    <p>您已经完成今天的学习任务</p>
+                    <button class="btn btn-primary" onclick="location.reload()">开始新一轮</button>
+                </div>
+            </section>
+
+            <!-- Management Page -->
+            <section id="managePage" class="page hidden">
+                <div class="manage-header">
+                    <button id="addWordBtn" class="btn btn-primary">
+                        <span class="btn-icon">➕</span>
+                        <span class="btn-text">添加单词</span>
+                    </button>
+                    <div class="manage-actions">
+                        <button id="importBtn" class="btn btn-secondary">
+                            <span class="btn-icon">📥</span>
+                            <span class="btn-text">导入</span>
+                        </button>
+                        <button id="exportBtn" class="btn btn-secondary">
+                            <span class="btn-icon">📤</span>
+                            <span class="btn-text">导出</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" id="searchInput" class="search-input" placeholder="搜索单词...">
+                </div>
+                
+                <div id="wordList" class="word-list">
+                    <!-- Words will be dynamically added here -->
+                </div>
+                
+                <div id="emptyWordList" class="empty-state">
+                    <div class="empty-icon">📚</div>
+                    <h3>暂无单词</h3>
+                    <p>点击上方"添加单词"按钮开始添加</p>
+                </div>
+            </section>
+
+            <!-- Statistics Page -->
+            <section id="statsPage" class="page hidden">
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalWordsCount">0</div>
+                        <div class="stat-label">总单词数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="masteredCount">0</div>
+                        <div class="stat-label">已掌握</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="learningCount">0</div>
+                        <div class="stat-label">学习中</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="todayCount">0</div>
+                        <div class="stat-label">今日学习</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>学习趋势</h3>
+                    <canvas id="learningChart"></canvas>
+                </div>
+                
+                <div class="achievement-list">
+                    <h3>成就徽章</h3>
+                    <div class="achievements">
+                        <div class="achievement locked">
+                            <span class="achievement-icon">🏆</span>
+                            <span class="achievement-name">初学者</span>
+                        </div>
+                        <div class="achievement locked">
+                            <span class="achievement-icon">⭐</span>
+                            <span class="achievement-name">坚持一周</span>
+                        </div>
+                        <div class="achievement locked">
+                            <span class="achievement-icon">💎</span>
+                            <span class="achievement-name">单词达人</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section id="settingsPage" class="page hidden">
+                <div class="settings-group">
+                    <h3>学习设置</h3>
+                    <div class="setting-item">
+                        <label for="dailyGoal">每日学习目标</label>
+                        <input type="number" id="dailyGoal" class="setting-input" min="5" max="100" value="20">
+                    </div>
+                    <div class="setting-item">
+                        <label for="reviewInterval">复习间隔（天）</label>
+                        <select id="reviewInterval" class="setting-select">
+                            <option value="standard">标准 (1,2,4,7,15)</option>
+                            <option value="fast">快速 (1,2,3,5,7)</option>
+                            <option value="slow">缓慢 (1,3,7,14,30)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>界面设置</h3>
+                    <div class="setting-item">
+                        <label for="fontSize">字体大小</label>
+                        <select id="fontSize" class="setting-select">
+                            <option value="small">小</option>
+                            <option value="medium" selected>中</option>
+                            <option value="large">大</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="soundEnabled">
+                            <input type="checkbox" id="soundEnabled" checked>
+                            <span>启用音效</span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label for="darkMode">
+                            <input type="checkbox" id="darkMode">
+                            <span>夜间模式</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>数据管理</h3>
+                    <button id="clearDataBtn" class="btn btn-danger">
+                        <span class="btn-icon">🗑️</span>
+                        <span class="btn-text">清除所有数据</span>
+                    </button>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>关于</h3>
+                    <p class="about-text">背单词小助手 v1.0.0</p>
+                    <p class="about-text">为孩子打造的英语学习应用</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <!-- Add Word Modal -->
+        <div id="addWordModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>添加单词</h3>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="addWordForm">
+                        <div class="form-group">
+                            <label for="inputEnglish">英文单词 *</label>
+                            <input type="text" id="inputEnglish" class="form-input" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputChinese">中文解释 *</label>
+                            <input type="text" id="inputChinese" class="form-input" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputExample">例句</label>
+                            <textarea id="inputExample" class="form-input" rows="3" placeholder="可选：输入一个例句帮助记忆"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" data-close-modal>取消</button>
+                            <button type="submit" class="btn btn-primary">添加</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Word Modal -->
+        <div id="editWordModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>编辑单词</h3>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="editWordForm">
+                        <input type="hidden" id="editWordId">
+                        <div class="form-group">
+                            <label for="editEnglish">英文单词 *</label>
+                            <input type="text" id="editEnglish" class="form-input" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="editChinese">中文解释 *</label>
+                            <input type="text" id="editChinese" class="form-input" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="editExample">例句</label>
+                            <textarea id="editExample" class="form-input" rows="3"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-danger" id="deleteWordBtn">删除</button>
+                            <button type="button" class="btn btn-secondary" data-close-modal>取消</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import/Export Modal -->
+        <div id="importExportModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="importExportTitle">导入/导出数据</h3>
+                    <button class="modal-close" data-close-modal>&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="importSection" class="hidden">
+                        <p>请粘贴JSON格式的单词数据：</p>
+                        <textarea id="importData" class="form-input" rows="10" placeholder='[{"english": "apple", "chinese": "苹果", "example": "I like apples."}]'></textarea>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" data-close-modal>取消</button>
+                            <button type="button" class="btn btn-primary" id="confirmImportBtn">导入</button>
+                        </div>
+                    </div>
+                    <div id="exportSection" class="hidden">
+                        <p>复制下面的JSON数据进行备份：</p>
+                        <textarea id="exportData" class="form-input" rows="10" readonly></textarea>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary" id="copyExportBtn">复制到剪贴板</button>
+                            <button type="button" class="btn btn-secondary" data-close-modal>关闭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast hidden">
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+    <!-- Scripts -->
+    <script src="/js/db.js"></script>
+    <script src="/js/memoryAlgorithm.js"></script>
+    <script src="/js/wordManager.js"></script>
+    <script src="/js/app.js"></script>
+    <script src="/js/sample-data.js"></script>
+    
+    <!-- Register Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => console.log('ServiceWorker registered'))
+                    .catch(err => console.log('ServiceWorker registration failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>
