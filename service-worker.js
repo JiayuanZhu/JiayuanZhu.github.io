@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bdc-v1.0.1';
+const CACHE_NAME = 'bdc-v1.1.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -7,6 +7,7 @@ const urlsToCache = [
   '/js/db.js',
   '/js/wordManager.js',
   '/js/memoryAlgorithm.js',
+  '/js/sync.js',
   '/manifest.json'
 ];
 

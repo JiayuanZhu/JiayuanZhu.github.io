@@ -79,6 +79,13 @@ class App {
         document.getElementById('darkMode')?.addEventListener('change', (e) => this.toggleDarkMode(e.target.checked));
         document.getElementById('clearDataBtn')?.addEventListener('click', () => this.clearAllData());
 
+        // GitHub Sync
+        document.getElementById('saveGithubBtn')?.addEventListener('click', () => this.saveGithubConfig());
+        document.getElementById('testGithubBtn')?.addEventListener('click', () => this.testGithubConnection());
+        document.getElementById('syncBtn')?.addEventListener('click', () => this.smartSync());
+        document.getElementById('uploadBtn')?.addEventListener('click', () => this.uploadToGithub());
+        document.getElementById('downloadBtn')?.addEventListener('click', () => this.downloadFromGithub());
+
         // Modal close buttons
         document.querySelectorAll('[data-close-modal]').forEach(btn => {
             btn.addEventListener('click', () => this.closeModal());
@@ -132,6 +139,9 @@ class App {
         // Apply visual settings
         this.updateFontSize(fontSize);
         this.toggleDarkMode(darkMode);
+
+        // Load GitHub settings
+        await this.loadGithubConfig();
     }
 
     // Switch between pages
@@ -192,6 +202,10 @@ class App {
         // Reset card flip state
         this.isCardFlipped = false;
         document.getElementById('wordCard').classList.remove('flipped');
+        
+        // Show card front, hide card back
+        document.getElementById('cardFront').classList.remove('hidden');
+        document.getElementById('cardBack').classList.remove('hidden');
         
         // Update card content
         document.getElementById('wordEnglish').textContent = word.english;
@@ -698,6 +712,163 @@ class App {
         // ESC to close modal
         if (e.key === 'Escape') {
             this.closeModal();
+        }
+    }
+
+    // GitHub Sync Functions
+    async loadGithubConfig() {
+        const token = await dbManager.getSetting('github_token', '');
+        const owner = await dbManager.getSetting('github_owner', '');
+        const repo = await dbManager.getSetting('github_repo', '');
+        const branch = await dbManager.getSetting('github_branch', 'main');
+
+        document.getElementById('githubToken').value = token;
+        document.getElementById('githubOwner').value = owner;
+        document.getElementById('githubRepo').value = repo;
+        document.getElementById('githubBranch').value = branch;
+
+        // Update sync status
+        await this.updateSyncStatus();
+    }
+
+    async saveGithubConfig() {
+        const token = document.getElementById('githubToken').value.trim();
+        const owner = document.getElementById('githubOwner').value.trim();
+        const repo = document.getElementById('githubRepo').value.trim();
+        const branch = document.getElementById('githubBranch').value.trim() || 'main';
+
+        if (!token || !owner || !repo) {
+            this.showToast('请填写所有必需字段', 'warning');
+            return;
+        }
+
+        try {
+            await syncManager.saveConfig(token, owner, repo, branch);
+            this.showToast('GitHub配置已保存', 'success');
+            await this.updateSyncStatus();
+        } catch (error) {
+            this.showToast('保存失败: ' + error.message, 'error');
+        }
+    }
+
+    async testGithubConnection() {
+        try {
+            this.showToast('正在测试连接...', 'info');
+            const result = await syncManager.testConnection();
+            
+            if (result.success) {
+                this.showToast(`连接成功！仓库: ${result.repoName}`, 'success');
+            }
+        } catch (error) {
+            this.showToast('连接失败: ' + error.message, 'error');
+        }
+    }
+
+    async smartSync() {
+        const configured = await syncManager.isConfigured();
+        if (!configured) {
+            this.showToast('请先在设置中配置GitHub', 'warning');
+            this.switchPage('settings');
+            return;
+        }
+
+        if (syncManager.syncing) {
+            this.showToast('同步进行中，请稍候', 'warning');
+            return;
+        }
+
+        try {
+            this.showToast('正在智能同步...', 'info');
+            const result = await syncManager.smartSync();
+            
+            this.showToast(result.message, 'success');
+            
+            // Reload word list and progress
+            await this.loadWordList();
+            await this.updateProgress();
+            await this.updateSyncStatus();
+        } catch (error) {
+            console.error('Sync error:', error);
+            this.showToast('同步失败: ' + error.message, 'error');
+        }
+    }
+
+    async uploadToGithub() {
+        const configured = await syncManager.isConfigured();
+        if (!configured) {
+            this.showToast('请先在设置中配置GitHub', 'warning');
+            this.switchPage('settings');
+            return;
+        }
+
+        if (!confirm('确定要上传本地数据到GitHub吗？这会覆盖远程数据。')) {
+            return;
+        }
+
+        try {
+            this.showToast('正在上传...', 'info');
+            const result = await syncManager.uploadToGitHub();
+            
+            this.showToast(result.message, 'success');
+            await this.updateSyncStatus();
+        } catch (error) {
+            console.error('Upload error:', error);
+            this.showToast('上传失败: ' + error.message, 'error');
+        }
+    }
+
+    async downloadFromGithub() {
+        const configured = await syncManager.isConfigured();
+        if (!configured) {
+            this.showToast('请先在设置中配置GitHub', 'warning');
+            this.switchPage('settings');
+            return;
+        }
+
+        if (!confirm('确定要从GitHub下载数据吗？这会覆盖本地数据。')) {
+            return;
+        }
+
+        try {
+            this.showToast('正在下载...', 'info');
+            const result = await syncManager.downloadFromGitHub();
+            
+            this.showToast(result.message + ` (导入 ${result.wordsImported} 个单词)`, 'success');
+            
+            // Reload word list and progress
+            await this.loadWordList();
+            await this.updateProgress();
+            await this.updateSyncStatus();
+        } catch (error) {
+            console.error('Download error:', error);
+            this.showToast('下载失败: ' + error.message, 'error');
+        }
+    }
+
+    async updateSyncStatus() {
+        const statusElement = document.getElementById('syncStatus');
+        if (!statusElement) return;
+
+        try {
+            const status = await syncManager.getSyncStatus();
+            
+            if (!status.configured) {
+                statusElement.innerHTML = '<p class="status-warning">⚠️ 未配置GitHub同步</p>';
+                return;
+            }
+
+            let statusHtml = '<p class="status-success">✅ GitHub已配置</p>';
+            
+            if (status.lastSyncTime) {
+                const timeStr = new Date(status.lastSyncTime).toLocaleString('zh-CN');
+                statusHtml += `<p class="status-info">最后同步: ${timeStr}</p>`;
+            } else {
+                statusHtml += '<p class="status-info">尚未同步</p>';
+            }
+
+            statusElement.innerHTML = statusHtml;
+        } catch (error) {
+            console.error('Error updating sync status:', error);
         }
     }
 }

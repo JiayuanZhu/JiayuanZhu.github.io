@@ -76,7 +76,7 @@
                                     <span id="currentIndex">1</span> / <span id="totalWords">1</span>
                                 </p>
                             </div>
-                            <div id="cardBack" class="card-face card-back hidden">
+                            <div id="cardBack" class="card-face card-back">
                                 <h3 id="wordChinese" class="word-chinese">欢迎</h3>
                                 <p id="wordExample" class="word-example">Welcome to vocabulary learning app!</p>
                                 <div class="word-info">
@@ -115,8 +115,20 @@
                         <span class="btn-text">添加单词</span>
                     </button>
                     <div class="manage-actions">
-                        <button id="importBtn" class="btn btn-secondary">
+                        <button id="syncBtn" class="btn btn-primary" title="智能同步">
+                            <span class="btn-icon">🔄</span>
+                            <span class="btn-text">同步</span>
+                        </button>
+                        <button id="uploadBtn" class="btn btn-secondary" title="上传到GitHub">
+                            <span class="btn-icon">☁️</span>
+                            <span class="btn-text">上传</span>
+                        </button>
+                        <button id="downloadBtn" class="btn btn-secondary" title="从GitHub下载">
                             <span class="btn-icon">📥</span>
+                            <span class="btn-text">下载</span>
+                        </button>
+                        <button id="importBtn" class="btn btn-secondary">
+                            <span class="btn-icon">📄</span>
                             <span class="btn-text">导入</span>
                         </button>
                         <button id="exportBtn" class="btn btn-secondary">
@@ -226,6 +238,39 @@
                             <span>夜间模式</span>
                         </label>
                     </div>
+                </div>
+                
+                <div class="settings-group">
+                    <h3>GitHub同步设置</h3>
+                    <p class="setting-description">配置GitHub同步，与家人共享学习数据</p>
+                    <div class="setting-item">
+                        <label for="githubToken">Personal Access Token</label>
+                        <input type="password" id="githubToken" class="setting-input" placeholder="ghp_xxxxxxxxxxxx">
+                        <small>需要repo权限。<a href="https://github.com/settings/tokens/new" target="_blank">创建Token</a></small>
+                    </div>
+                    <div class="setting-item">
+                        <label for="githubOwner">GitHub用户名</label>
+                        <input type="text" id="githubOwner" class="setting-input" placeholder="your-username">
+                    </div>
+                    <div class="setting-item">
+                        <label for="githubRepo">仓库名称</label>
+                        <input type="text" id="githubRepo" class="setting-input" placeholder="bdc">
+                    </div>
+                    <div class="setting-item">
+                        <label for="githubBranch">分支名称</label>
+                        <input type="text" id="githubBranch" class="setting-input" value="main" placeholder="main">
+                    </div>
+                    <div class="setting-actions">
+                        <button id="testGithubBtn" class="btn btn-secondary">
+                            <span class="btn-icon">🔌</span>
+                            <span class="btn-text">测试连接</span>
+                        </button>
+                        <button id="saveGithubBtn" class="btn btn-primary">
+                            <span class="btn-icon">💾</span>
+                            <span class="btn-text">保存配置</span>
+                        </button>
+                    </div>
+                    <div id="syncStatus" class="sync-status"></div>
                 </div>
                 
                 <div class="settings-group">
@@ -348,6 +393,7 @@
     <script src="/js/db.js"></script>
     <script src="/js/memoryAlgorithm.js"></script>
     <script src="/js/wordManager.js"></script>
+    <script src="/js/sync.js"></script>
     <script src="/js/app.js"></script>
     
     <!-- Register Service Worker -->
