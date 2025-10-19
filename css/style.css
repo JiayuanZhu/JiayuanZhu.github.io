@@ -268,6 +268,18 @@ body {
     color: var(--text-secondary);
 }
 
+.card-unit {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
 .word-chinese {
     font-size: 2rem;
     font-weight: 600;
@@ -366,8 +378,15 @@ body {
 
 /* Empty State */
 .empty-state {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 2rem;
+    width: 90%;
+    max-width: 400px;
+    z-index: 10;
 }
 
 .empty-state.hidden {
@@ -387,7 +406,7 @@ body {
 
 .empty-state p {
     color: var(--text-secondary);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 /* Management Page */
@@ -407,10 +426,12 @@ body {
 
 .search-bar {
     margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
 }
 
 .search-input {
-    width: 100%;
+    flex: 1;
     padding: 0.75rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -420,6 +441,23 @@ body {
 }
 
 .search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+}
+
+.unit-filter {
+    min-width: 150px;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.unit-filter:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
@@ -468,8 +506,19 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    gap: 0.25rem;
     font-size: 0.75rem;
     color: var(--text-secondary);
+}
+
+.word-item-unit {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
 /* Statistics Page */
@@ -516,6 +565,78 @@ body {
 #learningChart {
     width: 100%;
     height: 200px;
+}
+
+/* Unit Statistics */
+.unit-stats-container {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+}
+
+.unit-stats-container h3 {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.unit-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.unit-stat-card {
+    background: var(--background);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    border: 2px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.unit-stat-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.unit-stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.unit-stat-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.unit-stat-count {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.unit-stat-progress {
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.unit-stat-progress-bar {
+    height: 100%;
+    background: var(--success-color);
+    transition: width 0.3s ease;
+}
+
+.unit-stat-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
 }
 
 /* Achievements */
@@ -714,6 +835,26 @@ body {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.import-hint {
+    display: block;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding: 0.75rem;
+    background: var(--background);
+    border-left: 3px solid var(--primary-color);
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
 }
 
 .form-actions {

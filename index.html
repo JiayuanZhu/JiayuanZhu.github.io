@@ -140,6 +140,9 @@
                 
                 <div class="search-bar">
                     <input type="text" id="searchInput" class="search-input" placeholder="搜索单词...">
+                    <select id="unitFilter" class="unit-filter">
+                        <option value="">所有单元</option>
+                    </select>
                 </div>
                 
                 <div id="wordList" class="word-list">
@@ -177,6 +180,13 @@
                 <div class="chart-container">
                     <h3>学习趋势</h3>
                     <canvas id="learningChart"></canvas>
+                </div>
+                
+                <div class="unit-stats-container">
+                    <h3>单元学习情况</h3>
+                    <div id="unitStats" class="unit-stats">
+                        <!-- Unit stats will be dynamically added here -->
+                    </div>
                 </div>
                 
                 <div class="achievement-list">
@@ -308,6 +318,11 @@
                             <input type="text" id="inputChinese" class="form-input" required autocomplete="off">
                         </div>
                         <div class="form-group">
+                            <label for="inputUnit">单元 (Unit)</label>
+                            <input type="number" id="inputUnit" class="form-input" min="0" placeholder="例如: 1, 2, 3... (留空默认为未分组)" autocomplete="off">
+                            <small class="form-hint">按单元组织单词，方便管理和复习。留空或填0表示未分组</small>
+                        </div>
+                        <div class="form-group">
                             <label for="inputExample">例句</label>
                             <textarea id="inputExample" class="form-input" rows="3" placeholder="可选：输入一个例句帮助记忆"></textarea>
                         </div>
@@ -339,6 +354,11 @@
                             <input type="text" id="editChinese" class="form-input" required autocomplete="off">
                         </div>
                         <div class="form-group">
+                            <label for="editUnit">单元 (Unit)</label>
+                            <input type="number" id="editUnit" class="form-input" min="0" placeholder="例如: 1, 2, 3... (留空默认为未分组)" autocomplete="off">
+                            <small class="form-hint">按单元组织单词，方便管理和复习。留空或填0表示未分组</small>
+                        </div>
+                        <div class="form-group">
                             <label for="editExample">例句</label>
                             <textarea id="editExample" class="form-input" rows="3"></textarea>
                         </div>
@@ -362,7 +382,10 @@
                 <div class="modal-body">
                     <div id="importSection" class="hidden">
                         <p>请粘贴JSON格式的单词数据：</p>
-                        <textarea id="importData" class="form-input" rows="10" placeholder='[{"english": "apple", "chinese": "苹果", "example": "I like apples."}]'></textarea>
+                        <textarea id="importData" class="form-input" rows="10" placeholder='[{"english": "apple", "chinese": "苹果", "example": "I like apples.", "unit": 1}]'></textarea>
+                        <small class="import-hint">
+                            💡 提示：可以包含 "unit" 字段指定单元（数字），不指定则默认为未分组（unit 0）
+                        </small>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" data-close-modal>取消</button>
                             <button type="button" class="btn btn-primary" id="confirmImportBtn">导入</button>

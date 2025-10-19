@@ -60,7 +60,8 @@ class App {
         document.getElementById('addWordBtn')?.addEventListener('click', () => this.showAddWordModal());
         document.getElementById('importBtn')?.addEventListener('click', () => this.showImportModal());
         document.getElementById('exportBtn')?.addEventListener('click', () => this.showExportModal());
-        document.getElementById('searchInput')?.addEventListener('input', (e) => this.searchWords(e.target.value));
+        document.getElementById('searchInput')?.addEventListener('input', (e) => this.filterWords());
+        document.getElementById('unitFilter')?.addEventListener('change', (e) => this.filterWords());
 
         // Forms
         document.getElementById('addWordForm')?.addEventListener('submit', (e) => this.handleAddWord(e));
@@ -221,6 +222,18 @@ class App {
         document.getElementById('currentIndex').textContent = wordManager.currentIndex + 1;
         document.getElementById('totalWords').textContent = wordManager.currentWords.length;
         
+        // Update unit display on card front
+        const cardFront = document.getElementById('cardFront');
+        let unitBadge = cardFront.querySelector('.card-unit');
+        const unit = word.unit !== undefined && word.unit !== null ? word.unit : 0;
+        
+        if (!unitBadge) {
+            unitBadge = document.createElement('span');
+            unitBadge.className = 'card-unit';
+            cardFront.appendChild(unitBadge);
+        }
+        unitBadge.textContent = unit === 0 ? '未分组' : `Unit ${unit}`;
+        
         // Show card
         document.getElementById('wordCard').classList.remove('hidden');
         document.querySelector('.action-buttons').classList.remove('hidden');
@@ -327,8 +340,21 @@ class App {
     }
 
     // Load and display word list
-    async loadWordList(searchQuery = '') {
-        const words = await wordManager.getAllWords(searchQuery);
+    async loadWordList(searchQuery = '', unitFilter = '') {
+        let words;
+        
+        if (unitFilter) {
+            words = await wordManager.getWordsByUnit(unitFilter);
+            if (searchQuery) {
+                words = words.filter(word => 
+                    word.english.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    word.chinese.includes(searchQuery)
+                );
+            }
+        } else {
+            words = await wordManager.getAllWords(searchQuery);
+        }
+        
         const wordList = document.getElementById('wordList');
         const emptyState = document.getElementById('emptyWordList');
         
@@ -337,29 +363,61 @@ class App {
             emptyState.classList.remove('hidden');
         } else {
             emptyState.classList.add('hidden');
-            wordList.innerHTML = words.map(word => `
+            wordList.innerHTML = words.map(word => {
+                const unit = word.unit !== undefined && word.unit !== null ? word.unit : 0;
+                const unitLabel = unit === 0 ? '未分组' : `Unit ${unit}`;
+                return `
                 <div class="word-item" data-id="${word.id}">
                     <div class="word-item-content">
                         <div class="word-item-english">${word.english}</div>
                         <div class="word-item-chinese">${word.chinese}</div>
+                        <span class="word-item-unit">${unitLabel}</span>
                     </div>
                     <div class="word-item-meta">
                         <span>复习: ${word.reviewCount}次</span>
                         <span>难度: ${'⭐'.repeat(Math.max(1, word.difficulty))}</span>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             
             // Add click listeners
             wordList.querySelectorAll('.word-item').forEach(item => {
                 item.addEventListener('click', () => this.showEditWordModal(item.dataset.id));
             });
         }
+        
+        // Update unit filter dropdown
+        await this.updateUnitFilter();
     }
 
-    // Search words
-    async searchWords(query) {
-        await this.loadWordList(query);
+    // Filter words by search and unit
+    async filterWords() {
+        const searchQuery = document.getElementById('searchInput')?.value || '';
+        const unitFilter = document.getElementById('unitFilter')?.value || '';
+        await this.loadWordList(searchQuery, unitFilter);
+    }
+    
+    // Update unit filter dropdown
+    async updateUnitFilter() {
+        const unitFilter = document.getElementById('unitFilter');
+        if (!unitFilter) return;
+        
+        const units = await wordManager.getAllUnits();
+        const currentValue = unitFilter.value;
+        
+        unitFilter.innerHTML = '<option value="">所有单元</option>';
+        units.forEach(unit => {
+            const option = document.createElement('option');
+            option.value = unit;
+            option.textContent = unit === 0 ? '未分组' : `Unit ${unit}`;
+            unitFilter.appendChild(option);
+        });
+        
+        // Restore previous selection if it still exists
+        if (currentValue && units.includes(parseInt(currentValue))) {
+            unitFilter.value = currentValue;
+        }
     }
 
     // Show add word modal
@@ -376,6 +434,7 @@ class App {
         document.getElementById('editWordId').value = word.id;
         document.getElementById('editEnglish').value = word.english;
         document.getElementById('editChinese').value = word.chinese;
+        document.getElementById('editUnit').value = word.unit || '';
         document.getElementById('editExample').value = word.example || '';
         
         document.getElementById('editWordModal').classList.remove('hidden');
@@ -387,10 +446,11 @@ class App {
         
         const english = document.getElementById('inputEnglish').value;
         const chinese = document.getElementById('inputChinese').value;
+        const unit = document.getElementById('inputUnit').value;
         const example = document.getElementById('inputExample').value;
         
         try {
-            await wordManager.addWord(english, chinese, example);
+            await wordManager.addWord(english, chinese, example, unit);
             this.showToast('单词添加成功', 'success');
             this.closeModal();
             
@@ -398,7 +458,7 @@ class App {
             e.target.reset();
             
             // Reload word list
-            await this.loadWordList();
+            await this.filterWords();
             
             // Update progress
             await this.updateProgress();
@@ -414,15 +474,16 @@ class App {
         const id = parseInt(document.getElementById('editWordId').value);
         const english = document.getElementById('editEnglish').value;
         const chinese = document.getElementById('editChinese').value;
+        const unit = document.getElementById('editUnit').value;
         const example = document.getElementById('editExample').value;
         
         try {
-            await wordManager.updateWord(id, english, chinese, example);
+            await wordManager.updateWord(id, english, chinese, example, unit);
             this.showToast('单词更新成功', 'success');
             this.closeModal();
             
             // Reload word list
-            await this.loadWordList();
+            await this.filterWords();
         } catch (error) {
             this.showToast(error.message || '更新失败', 'error');
         }
@@ -439,7 +500,7 @@ class App {
                 this.closeModal();
                 
                 // Reload word list
-                await this.loadWordList();
+                await this.filterWords();
                 
                 // Update progress
                 await this.updateProgress();
@@ -487,7 +548,7 @@ class App {
             document.getElementById('importData').value = '';
             
             // Reload word list
-            await this.loadWordList();
+            await this.filterWords();
             
             // Update progress
             await this.updateProgress();
@@ -542,6 +603,51 @@ class App {
         
         // Draw learning chart (simple implementation)
         this.drawLearningChart(stats.schedule);
+        
+        // Display unit statistics
+        await this.loadUnitStatistics();
+    }
+    
+    // Load and display unit statistics
+    async loadUnitStatistics() {
+        const unitStatsContainer = document.getElementById('unitStats');
+        if (!unitStatsContainer) return;
+        
+        const units = await wordManager.getAllUnits();
+        
+        if (units.length === 0) {
+            unitStatsContainer.innerHTML = '<p class="empty-message">暂无单元数据</p>';
+            return;
+        }
+        
+        const unitStatsHtml = await Promise.all(units.map(async unit => {
+            const words = await wordManager.getWordsByUnit(unit);
+            const totalWords = words.length;
+            const masteredWords = words.filter(w => w.difficulty >= 4).length;
+            const learningWords = words.filter(w => w.reviewCount > 0 && w.difficulty < 4).length;
+            const newWords = words.filter(w => w.reviewCount === 0).length;
+            const progress = totalWords > 0 ? Math.round((masteredWords / totalWords) * 100) : 0;
+            
+            const unitLabel = unit === 0 ? '未分组' : `Unit ${unit}`;
+            return `
+                <div class="unit-stat-card">
+                    <div class="unit-stat-header">
+                        <span class="unit-stat-title">${unitLabel}</span>
+                        <span class="unit-stat-count">${totalWords}词</span>
+                    </div>
+                    <div class="unit-stat-progress">
+                        <div class="unit-stat-progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="unit-stat-info">
+                        <span>掌握: ${masteredWords}</span>
+                        <span>学习中: ${learningWords}</span>
+                        <span>新词: ${newWords}</span>
+                    </div>
+                </div>
+            `;
+        }));
+        
+        unitStatsContainer.innerHTML = unitStatsHtml.join('');
     }
 
     // Draw learning chart

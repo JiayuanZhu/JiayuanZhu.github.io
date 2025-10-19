@@ -118,15 +118,23 @@ A: 存储在你的GitHub仓库的`data/vocabulary-data.json`文件中，可以�
   {
     "english": "apple",
     "chinese": "苹果",
-    "example": "I eat an apple every day."
+    "example": "I eat an apple every day.",
+    "unit": 1
   },
   {
     "english": "book",
     "chinese": "书",
-    "example": "She is reading a book."
+    "example": "She is reading a book.",
+    "unit": 1
   }
 ]
 ```
+
+**字段说明：**
+- `english`: 英文单词（必填）
+- `chinese`: 中文解释（必填）
+- `example`: 例句（可选）
+- `unit`: 单元编号（可选，不填默认为0-未分组）
 
 ### 导出备份
 点击"导出"按钮可将所有单词导出为JSON格式，用于备份或分享。

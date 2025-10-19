@@ -110,29 +110,39 @@ class WordManager {
     }
 
     // Add a new word
-    async addWord(english, chinese, example = '') {
+    async addWord(english, chinese, example = '', unit = null) {
         // Check if word already exists
         const existingWords = await dbManager.searchWords(english);
         if (existingWords.some(w => w.english.toLowerCase() === english.toLowerCase())) {
             throw new Error('Word already exists');
         }
 
-        const wordId = await dbManager.addWord({
+        const wordData = {
             english: english.trim(),
             chinese: chinese.trim(),
             example: example.trim()
-        });
+        };
+
+        // Parse unit: default to 0 if not specified or invalid
+        const parsedUnit = unit ? parseInt(unit) : 0;
+        wordData.unit = parsedUnit >= 0 ? parsedUnit : 0;
+
+        const wordId = await dbManager.addWord(wordData);
 
         return wordId;
     }
 
     // Update an existing word
-    async updateWord(id, english, chinese, example = '') {
+    async updateWord(id, english, chinese, example = '', unit = null) {
         const updates = {
             english: english.trim(),
             chinese: chinese.trim(),
             example: example.trim()
         };
+
+        // Parse unit: default to 0 if not specified or invalid
+        const parsedUnit = unit ? parseInt(unit) : 0;
+        updates.unit = parsedUnit >= 0 ? parsedUnit : 0;
 
         return await dbManager.updateWord(id, updates);
     }
@@ -195,8 +205,9 @@ class WordManager {
                     continue;
                 }
 
-                // Add word
-                await this.addWord(word.english, word.chinese, word.example || '');
+                // Add word with unit (default to 0 if not specified)
+                const unit = word.unit !== undefined && word.unit !== null ? word.unit : 0;
+                await this.addWord(word.english, word.chinese, word.example || '', unit);
                 imported++;
             } catch (e) {
                 errors.push(`Error importing "${word.english}": ${e.message}`);
@@ -224,6 +235,7 @@ class WordManager {
                 english: word.english,
                 chinese: word.chinese,
                 example: word.example,
+                unit: word.unit !== undefined && word.unit !== null ? word.unit : 0,
                 reviewCount: word.reviewCount,
                 difficulty: word.difficulty,
                 createdAt: word.createdAt
@@ -231,6 +243,16 @@ class WordManager {
         };
 
         return JSON.stringify(exportData, null, 2);
+    }
+
+    // Get words by unit (for filtering)
+    async getWordsByUnit(unit) {
+        return await dbManager.getWordsByUnit(parseInt(unit));
+    }
+
+    // Get all available units
+    async getAllUnits() {
+        return await dbManager.getAllUnits();
     }
 
     // Get learning progress

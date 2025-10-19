@@ -2,7 +2,7 @@
 class DatabaseManager {
     constructor() {
         this.dbName = 'VocabularyDB';
-        this.version = 1;
+        this.version = 2; // Upgraded to support unit field
         this.db = null;
     }
 
@@ -24,6 +24,7 @@ class DatabaseManager {
 
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
+                const oldVersion = event.oldVersion;
 
                 // Create words object store if it doesn't exist
                 if (!db.objectStoreNames.contains('words')) {
@@ -37,6 +38,15 @@ class DatabaseManager {
                     wordsStore.createIndex('nextReviewDate', 'nextReviewDate', { unique: false });
                     wordsStore.createIndex('createdAt', 'createdAt', { unique: false });
                     wordsStore.createIndex('difficulty', 'difficulty', { unique: false });
+                    wordsStore.createIndex('unit', 'unit', { unique: false });
+                } else if (oldVersion < 2) {
+                    // Upgrade from version 1 to 2: add unit index
+                    const transaction = event.target.transaction;
+                    const wordsStore = transaction.objectStore('words');
+                    
+                    if (!wordsStore.indexNames.contains('unit')) {
+                        wordsStore.createIndex('unit', 'unit', { unique: false });
+                    }
                 }
 
                 // Create settings object store
@@ -53,7 +63,7 @@ class DatabaseManager {
                     statsStore.createIndex('date', 'date', { unique: false });
                 }
 
-                console.log('Database structure created/updated');
+                console.log('Database structure created/updated to version', db.version);
             };
         });
     }
@@ -71,6 +81,7 @@ class DatabaseManager {
         const store = await this.transaction('words', 'readwrite');
         const word = {
             ...wordData,
+            unit: wordData.unit || 0, // Default to unit 0 if not specified
             createdAt: Date.now(),
             lastReviewedAt: null,
             nextReviewDate: Date.now(), // Available for review immediately
@@ -203,6 +214,29 @@ class DatabaseManager {
             word.english.toLowerCase().includes(lowercaseQuery) ||
             word.chinese.includes(query)
         );
+    }
+
+    async getWordsByUnit(unit) {
+        const store = await this.transaction('words');
+        const index = store.index('unit');
+        
+        return new Promise((resolve, reject) => {
+            const request = index.getAll(unit);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async getAllUnits() {
+        const allWords = await this.getAllWords();
+        const units = new Set();
+        
+        allWords.forEach(word => {
+            const unit = word.unit !== undefined && word.unit !== null ? word.unit : 0;
+            units.add(unit);
+        });
+        
+        return Array.from(units).sort((a, b) => a - b);
     }
 
     // Settings Operations
